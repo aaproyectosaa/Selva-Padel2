@@ -1,25 +1,27 @@
-import type React from "react"
-import "@/app/globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "@/app/globals.css";
+import { Providers } from "./providers";
 
-export const metadata = {
-  title: "PadelReserva - Sistema de Reservas de Pádel",
-  description: "Reserva tu cancha de pádel de manera fácil y rápida",
-    generator: 'v0.dev'
-}
+const inter = Inter({ subsets: ["latin"] });
+
+export const metadata: Metadata = {
+  title: "Selva Padel",
+  description: "Reserva tu pista de pádel en Selva Padel",
+};
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <body className={inter.className}>
+        <Providers>
           {children}
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
-  )
+  );
 }

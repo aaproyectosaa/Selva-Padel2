@@ -111,7 +111,7 @@ export async function addCourt(
 
     // Verificar si ya existe una cancha con el mismo nombre
     const courtExists = Object.values(courts).some((court: any) => court.name === courtName)
-    
+
     if (courtExists) {
       throw new Error("Esta cancha ya existe")
     }
@@ -149,7 +149,7 @@ export async function removeCourt(courtId: string): Promise<void> {
     }
 
     const courts = snapshot.val()
-    
+
     if (!courts[courtId]) {
       throw new Error("Esta cancha no existe")
     }

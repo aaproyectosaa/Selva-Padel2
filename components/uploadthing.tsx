@@ -5,6 +5,7 @@ import { generateClientDropzoneAccept } from "uploadthing/client";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, X, Image } from "lucide-react";
+import { useUploadThing } from "@/utils/uploadthing";
 
 interface UploadThingProps {
   onUploadComplete: (url: string) => void;
@@ -13,115 +14,80 @@ interface UploadThingProps {
 
 export function UploadThingImage({ onUploadComplete, value }: UploadThingProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const [preview, setPreview] = useState<string | null>(value || null);
-  const [error, setError] = useState<string | null>(null);
+  const { startUpload, isUploading: isUploadingThing } = useUploadThing("imageUploader", {
+    onClientUploadComplete: (res: { url: string }[] | undefined) => {
+      if (res?.[0]) {
+        onUploadComplete(res[0].url);
+      }
+      setIsUploading(false);
+    },
+    onUploadError: (error: Error) => {
+      console.error("Error al subir la imagen:", error);
+      setIsUploading(false);
+    },
+  });
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      setIsUploading(true);
-      setError(null);
-
-      try {
-        const file = acceptedFiles[0];
-        
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append("file", file);
-        
-        // Crear URL de vista previa temporal
-        const previewUrl = URL.createObjectURL(file);
-        setPreview(previewUrl);
-
-        // Subir a UploadThing
-        const res = await fetch("/api/uploadthing", {
-          method: "POST",
-          headers: {
-            "X-uploadthing-action": "upload",
-          },
-          body: formData,
-        });
-
-        if (!res.ok) {
-          throw new Error("Error al subir la imagen");
-        }
-
-        const data = await res.json();
-        const imageUrl = data.data[0].url;
-        
-        setIsUploading(false);
-        onUploadComplete(imageUrl);
-      } catch (err: any) {
-        console.error("Error:", err);
-        setError(err.message || "Error al subir la imagen");
-        setIsUploading(false);
+      if (acceptedFiles.length > 0) {
+        setIsUploading(true);
+        await startUpload(acceptedFiles);
       }
     },
-    [onUploadComplete]
+    [startUpload]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: generateClientDropzoneAccept(["image/*"]),
+    accept: {
+      'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+    },
     maxFiles: 1,
-    multiple: false,
   });
 
-  const removeImage = () => {
-    setPreview(null);
-    onUploadComplete("");
-  };
-
   return (
-    <div className="w-full">
-      {preview ? (
-        <div className="relative w-full h-40 mb-2 border rounded-md overflow-hidden">
-          <img 
-            src={preview} 
-            alt="Vista previa" 
-            className="w-full h-full object-cover" 
-          />
-          <button 
-            onClick={removeImage}
-            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
-            type="button"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-md p-4 text-center cursor-pointer transition-colors ${
-            isDragActive ? "border-green-500 bg-green-50" : "border-gray-300 hover:border-green-500"
-          }`}
-        >
-          <input {...getInputProps()} />
-          <div className="flex flex-col items-center justify-center space-y-2">
-            <div className="p-2 bg-green-50 rounded-full">
-              <UploadCloud className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="text-sm text-gray-600">
-              {isDragActive ? (
-                <p>Suelta la imagen aquí...</p>
-              ) : (
-                <p>Arrastra una imagen aquí, o haz clic para seleccionar</p>
-              )}
-            </div>
-            <p className="text-xs text-gray-400">PNG, JPG o WEBP (máx. 4MB)</p>
+    <div className="flex flex-col gap-2">
+      <div
+        {...getRootProps()}
+        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors
+          ${isDragActive ? "border-primary bg-primary/10" : "border-gray-300 hover:border-primary"}
+          ${isUploading ? "opacity-50 cursor-not-allowed" : ""}`}
+      >
+        <input {...getInputProps()} disabled={isUploading} />
+        {value ? (
+          <div className="relative">
+            <img
+              src={value}
+              alt="Preview"
+              className="max-h-32 mx-auto rounded-lg"
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute -top-2 -right-2 h-6 w-6"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUploadComplete("");
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-        </div>
-      )}
-      
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <UploadCloud className="h-8 w-8 text-gray-400" />
+            <p className="text-sm text-gray-500">
+              {isDragActive
+                ? "Suelta la imagen aquí"
+                : "Arrastra una imagen o haz clic para seleccionar"}
+            </p>
+          </div>
+        )}
+      </div>
       {isUploading && (
-        <div className="mt-2 text-sm text-blue-600">
+        <div className="text-sm text-gray-500 text-center">
           Subiendo imagen...
-        </div>
-      )}
-      
-      {error && (
-        <div className="mt-2 text-sm text-red-600">
-          {error}
         </div>
       )}
     </div>

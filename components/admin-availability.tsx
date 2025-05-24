@@ -499,15 +499,15 @@ export default function AdminAvailability() {
                             >
                               <Edit2 className="h-4 w-4" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleRemoveCourt(court)}
-                              className="text-red-600 hover:text-red-800 hover:bg-red-50"
-                              disabled={isActionLoading}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveCourt(court)}
+                          className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                          disabled={isActionLoading}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
