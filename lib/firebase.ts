@@ -4,15 +4,14 @@ import { getAuth } from "firebase/auth"
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAztT4dNVqTPMecYx3AaN3fdg3NT3BLoYM",
-  authDomain: "padelbase-bc71d.firebaseapp.com",
-  databaseURL: "https://padelbase-bc71d-default-rtdb.firebaseio.com",
-  projectId: "padelbase-bc71d",
-  storageBucket: "padelbase-bc71d.firebasestorage.app",
-  messagingSenderId: "438860500100",
-  appId: "1:438860500100:web:5dd2a5d2e8f7be60d806d1",
-  measurementId: "G-F0GP67S34D",
-}
+  apiKey: "AIzaSyAnNjPe0wtgWS4JpyK9fi3cMU1NVx0Uz2o",
+  authDomain: "selvapadel.firebaseapp.com",
+  projectId: "selvapadel",
+  storageBucket: "selvapadel.firebasestorage.app",
+  messagingSenderId: "533930458520",
+  appId: "1:533930458520:web:b9a2b24c556071f8cbffed",
+  measurementId: "G-YVY7HW4RKY"
+};
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig)

@@ -8,6 +8,7 @@ export interface Court {
   description: string;
   dayPrice: number;
   nightPrice: number;
+  imageUrl?: string; // URL de la imagen de la cancha
 }
 
 // Initialize Firebase with sample data if needed
@@ -74,7 +75,8 @@ export async function getAvailableCourts(): Promise<Court[]> {
         name: courtsData[id].name,
         description: courtsData[id].description || "",
         dayPrice: courtsData[id].dayPrice || 0,
-        nightPrice: courtsData[id].nightPrice || 0
+        nightPrice: courtsData[id].nightPrice || 0,
+        imageUrl: courtsData[id].imageUrl || ""
       }));
     }
     return []
@@ -100,7 +102,8 @@ export async function addCourt(
   courtName: string, 
   description: string = "", 
   dayPrice: number = 0, 
-  nightPrice: number = 0
+  nightPrice: number = 0,
+  imageUrl: string = ""
 ): Promise<void> {
   try {
     const snapshot = await get(ref(database, "courts"))
@@ -122,7 +125,8 @@ export async function addCourt(
       name: courtName,
       description,
       dayPrice,
-      nightPrice
+      nightPrice,
+      imageUrl
     }
 
     // Guardar la cancha con su ID como clave
@@ -181,7 +185,8 @@ export async function updateCourt(
   courtName: string, 
   description: string, 
   dayPrice: number, 
-  nightPrice: number
+  nightPrice: number,
+  imageUrl: string = ""
 ): Promise<void> {
   try {
     const courtRef = ref(database, `courts/${courtId}`);
@@ -195,7 +200,8 @@ export async function updateCourt(
       name: courtName,
       description,
       dayPrice,
-      nightPrice
+      nightPrice,
+      imageUrl
     };
     
     await update(courtRef, courtData);

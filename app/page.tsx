@@ -149,18 +149,28 @@ export default function Home() {
 
       <main className="container mx-auto px-3 py-5">
         <section className="text-center mb-5">
-          <h2 className="text-3xl font-bold text-green-800 mb-1">Reserva tu pista de pádel</h2>
+          <h2 className="text-3xl font-bold text-green-800 mb-1">Reserva tu turno de pádel</h2>
           <p className="text-sm text-gray-600 max-w-xl mx-auto">
-            Reserva fácilmente tu pista de pádel en pocos pasos. Sin necesidad de registro.
+            Reserva fácilmente tu cancha de pádel en pocos pasos. Sin necesidad de registro.
           </p>
         </section>
 
         {/* Información de la cancha con imagen */}
         <div className="max-w-md mx-auto mb-4 overflow-hidden rounded-lg shadow">
           <div className="relative h-48 w-full">
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
-              <span>Platense Padel Club</span>
-            </div>
+            {selectedCourtDetails && selectedCourtDetails.imageUrl ? (
+              <Image 
+                src={selectedCourtDetails.imageUrl} 
+                alt={selectedCourtDetails.name} 
+                fill 
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 text-gray-500">
+                <span>Selva Padel Club</span>
+              </div>
+            )}
             <div className="absolute bottom-0 right-0 m-3">
               <div className="bg-orange-400 rounded-full h-10 w-10 flex items-center justify-center">
                 <MapPin className="text-white h-5 w-5" />
@@ -169,7 +179,7 @@ export default function Home() {
           </div>
           <div className="bg-white p-3">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-800">Platense Padel Club</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Selva Padel Club</h3>
               <div className="flex items-center">
                 <span className="text-base font-bold text-green-700 mr-1">5</span>
                 <Star className="h-4 w-4 fill-green-700 text-green-700" />
@@ -177,7 +187,7 @@ export default function Home() {
             </div>
             <div className="flex items-center text-gray-500 mt-0.5">
               <MapPin className="h-3 w-3 mr-1" />
-              <span className="text-xs">Porvenir 1896, Reconquista</span>
+              <span className="text-xs">Selva 1000 , Selva</span>
             </div>
           </div>
           <div className="border-t flex">

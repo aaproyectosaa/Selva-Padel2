@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { CheckCircle2, AlertCircle, Plus, Trash2, Loader2, Info, Clock, Edit2 } from "lucide-react"
+import { CheckCircle2, AlertCircle, Plus, Trash2, Loader2, Info, Clock, Edit2, Image } from "lucide-react"
 import {
   addCourt,
   removeCourt,
@@ -39,6 +39,10 @@ export default function AdminAvailability() {
   const [newCourtDescription, setNewCourtDescription] = useState(COURT_DESCRIPTIONS[0])
   const [newCourtDayPrice, setNewCourtDayPrice] = useState<number>(0)
   const [newCourtNightPrice, setNewCourtNightPrice] = useState<number>(0)
+  const [newCourtImage, setNewCourtImage] = useState<File | null>(null)
+  const [newCourtImageUrl, setNewCourtImageUrl] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const editFileInputRef = useRef<HTMLInputElement>(null)
   const [selectedCourt, setSelectedCourt] = useState("")
   const [editingCourt, setEditingCourt] = useState<Court | null>(null)
   const [date, setDate] = useState<Date | undefined>(undefined)
@@ -135,11 +139,33 @@ export default function AdminAvailability() {
 
     setIsActionLoading(true)
     try {
+      // Si hay una imagen seleccionada, procesarla
+      let imageUrl = "";
+      if (newCourtImage) {
+        const fileName = `${Date.now()}_${newCourtImage.name}`;
+        const formData = new FormData();
+        formData.append('file', newCourtImage);
+        
+        // Crear una solicitud para guardar la imagen en la carpeta public/courts
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error("Error al subir la imagen");
+        }
+        
+        const data = await response.json();
+        imageUrl = data.url; // Url relativa de la imagen (/courts/imagen.jpg)
+      }
+
       await addCourt(
         newCourt.trim(),
         newCourtDescription,
         newCourtDayPrice,
-        newCourtNightPrice
+        newCourtNightPrice,
+        imageUrl
       )
       const updatedCourts = await getAvailableCourts()
       setCourts(updatedCourts)
@@ -147,6 +173,11 @@ export default function AdminAvailability() {
       setNewCourtDescription(COURT_DESCRIPTIONS[0])
       setNewCourtDayPrice(0)
       setNewCourtNightPrice(0)
+      setNewCourtImage(null)
+      setNewCourtImageUrl("")
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
       setSuccess(`Cancha "${newCourt}" añadida correctamente`)
       setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
@@ -183,16 +214,43 @@ export default function AdminAvailability() {
 
     setIsActionLoading(true)
     try {
+      // Procesar imagen si hay una nueva
+      let imageUrl = editingCourt.imageUrl || "";
+      if (newCourtImage) {
+        const fileName = `${Date.now()}_${newCourtImage.name}`;
+        const formData = new FormData();
+        formData.append('file', newCourtImage);
+        
+        // Crear una solicitud para guardar la imagen en la carpeta public/courts
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error("Error al subir la imagen");
+        }
+        
+        const data = await response.json();
+        imageUrl = data.url; // Url relativa de la imagen (/courts/imagen.jpg)
+      }
+
       await updateCourt(
         editingCourt.id,
         editingCourt.name,
         editingCourt.description,
         editingCourt.dayPrice,
-        editingCourt.nightPrice
+        editingCourt.nightPrice,
+        imageUrl
       )
       const updatedCourts = await getAvailableCourts()
       setCourts(updatedCourts)
       setEditingCourt(null)
+      setNewCourtImage(null)
+      setNewCourtImageUrl("")
+      if (editFileInputRef.current) {
+        editFileInputRef.current.value = "";
+      }
       setSuccess(`Cancha "${editingCourt.name}" actualizada correctamente`)
       setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
@@ -348,6 +406,14 @@ export default function AdminAvailability() {
     }
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setNewCourtImage(file);
+      setNewCourtImageUrl(URL.createObjectURL(file));
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -431,6 +497,29 @@ export default function AdminAvailability() {
                   </div>
                 </div>
 
+                <div>
+                  <Label htmlFor="court-image">Imagen de la cancha</Label>
+                  <div className="flex items-center gap-4 mt-1">
+                    <Input
+                      id="court-image"
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="flex-1"
+                    />
+                    {newCourtImageUrl && (
+                      <div className="w-20 h-20 relative flex-shrink-0 border rounded overflow-hidden">
+                        <img 
+                          src={newCourtImageUrl} 
+                          alt="Vista previa" 
+                          className="object-cover w-full h-full" 
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <Button 
                   onClick={handleAddCourt} 
                   className="bg-green-700 hover:bg-green-800 w-full" 
@@ -489,6 +578,15 @@ export default function AdminAvailability() {
                             <span className="font-medium">Precio Noche:</span> ${court.nightPrice}
                           </div>
                         </div>
+                        {court.imageUrl && (
+                          <div className="mt-2 bg-gray-100 rounded-md overflow-hidden h-24 relative">
+                            <img 
+                              src={court.imageUrl} 
+                              alt={`${court.name}`} 
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -555,6 +653,37 @@ export default function AdminAvailability() {
                             nightPrice: parseInt(e.target.value) || 0
                           })}
                         />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="edit-court-image">Imagen de la cancha</Label>
+                      <div className="flex items-center gap-4 mt-1">
+                        <Input
+                          id="edit-court-image"
+                          type="file"
+                          accept="image/*"
+                          ref={editFileInputRef}
+                          onChange={handleFileChange}
+                          className="flex-1"
+                        />
+                        {newCourtImageUrl ? (
+                          <div className="w-20 h-20 relative flex-shrink-0 border rounded overflow-hidden">
+                            <img 
+                              src={newCourtImageUrl} 
+                              alt="Vista previa" 
+                              className="object-cover w-full h-full" 
+                            />
+                          </div>
+                        ) : editingCourt.imageUrl ? (
+                          <div className="w-20 h-20 relative flex-shrink-0 border rounded overflow-hidden">
+                            <img 
+                              src={editingCourt.imageUrl} 
+                              alt={`${editingCourt.name}`} 
+                              className="object-cover w-full h-full" 
+                            />
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                     
