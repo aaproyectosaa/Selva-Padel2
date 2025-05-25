@@ -1,41 +1,44 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { generateClientDropzoneAccept } from "uploadthing/client";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
-import { UploadCloud, X, Image } from "lucide-react";
-import { useUploadThing } from "@/utils/uploadthing";
+import { UploadCloud, X } from "lucide-react";
 
-interface UploadThingProps {
+interface CloudinaryUploadProps {
   onUploadComplete: (url: string) => void;
   value?: string;
 }
 
-export function UploadThingImage({ onUploadComplete, value }: UploadThingProps) {
+export function CloudinaryUpload({ onUploadComplete, value }: CloudinaryUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
-  const { startUpload, isUploading: isUploadingThing } = useUploadThing("imageUploader", {
-    onClientUploadComplete: (res: { url: string }[] | undefined) => {
-      if (res?.[0]) {
-        onUploadComplete(res[0].url);
-      }
-      setIsUploading(false);
-    },
-    onUploadError: (error: Error) => {
-      console.error("Error al subir la imagen:", error);
-      setIsUploading(false);
-    },
-  });
 
-  const onDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      if (acceptedFiles.length > 0) {
-        setIsUploading(true);
-        await startUpload(acceptedFiles);
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+
+    setIsUploading(true);
+    const file = acceptedFiles[0];
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al subir la imagen");
       }
-    },
-    [startUpload]
-  );
+
+      const data = await response.json();
+      onUploadComplete(data.url);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [onUploadComplete]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

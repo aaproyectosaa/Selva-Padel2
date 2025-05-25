@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2, AlertCircle, Plus, Trash2, Loader2, Info, Clock, Edit2, Image } from "lucide-react"
-import { UploadThingImage } from "@/components/uploadthing"
+import { CloudinaryUpload } from "@/components/cloudinary-upload"
 import {
   addCourt,
   removeCourt,
@@ -453,7 +453,7 @@ export default function AdminAvailability() {
                 <div>
                   <Label htmlFor="court-image">Imagen de la cancha</Label>
                   <div className="flex items-center gap-4 mt-1">
-                    <UploadThingImage
+                    <CloudinaryUpload
                       onUploadComplete={handleImageUpload}
                       value={newCourtImageUrl}
                     />
@@ -599,7 +599,7 @@ export default function AdminAvailability() {
                     <div>
                       <Label htmlFor="edit-court-image">Imagen de la cancha</Label>
                       <div className="flex items-center gap-4 mt-1">
-                        <UploadThingImage
+                        <CloudinaryUpload
                           onUploadComplete={handleEditImageUpload}
                           value={editingCourt?.imageUrl}
                         />

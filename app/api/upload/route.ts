@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
+import { cloudinary } from "@/lib/cloudinary";
 
 // Asegurarse de que el directorio existe
 const ensureDirectoryExists = (dirPath: string) => {
@@ -48,9 +49,23 @@ export async function POST(request: NextRequest) {
     // Guardar el archivo
     await writeFile(filePath, buffer);
     
+    // Subir a Cloudinary
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream(
+        {
+          folder: "selva-padel",
+          resource_type: "auto",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          resolve(result);
+        }
+      ).end(buffer);
+    });
+
     // Devolver la URL relativa (desde /public)
     return NextResponse.json({ 
-      url: `/courts/${filename}`,
+      url: (result as any).secure_url,
       message: 'Archivo subido correctamente' 
     });
     
