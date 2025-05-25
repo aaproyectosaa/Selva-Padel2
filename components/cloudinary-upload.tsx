@@ -4,6 +4,8 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { UploadCloud, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface CloudinaryUploadProps {
   onUploadComplete: (url: string) => void;
@@ -12,11 +14,13 @@ interface CloudinaryUploadProps {
 
 export function CloudinaryUpload({ onUploadComplete, value }: CloudinaryUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles.length === 0) return;
 
     setIsUploading(true);
+    setError(null);
     const file = acceptedFiles[0];
     const formData = new FormData();
     formData.append("file", file);
@@ -28,13 +32,15 @@ export function CloudinaryUpload({ onUploadComplete, value }: CloudinaryUploadPr
       });
 
       if (!response.ok) {
-        throw new Error("Error al subir la imagen");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al subir la imagen");
       }
 
       const data = await response.json();
       onUploadComplete(data.url);
     } catch (error) {
       console.error("Error:", error);
+      setError(error instanceof Error ? error.message : "Error al subir la imagen");
     } finally {
       setIsUploading(false);
     }
@@ -92,6 +98,12 @@ export function CloudinaryUpload({ onUploadComplete, value }: CloudinaryUploadPr
         <div className="text-sm text-gray-500 text-center">
           Subiendo imagen...
         </div>
+      )}
+      {error && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
     </div>
   );

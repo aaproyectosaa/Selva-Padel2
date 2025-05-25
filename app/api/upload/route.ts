@@ -13,6 +13,17 @@ const ensureDirectoryExists = (dirPath: string) => {
 
 export async function POST(request: NextRequest) {
   try {
+    // Verificar que las variables de entorno estén configuradas
+    if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 
+        !process.env.CLOUDINARY_API_KEY || 
+        !process.env.CLOUDINARY_API_SECRET) {
+      console.error("Faltan variables de entorno de Cloudinary");
+      return NextResponse.json(
+        { error: "Error de configuración del servidor" },
+        { status: 500 }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -57,22 +68,24 @@ export async function POST(request: NextRequest) {
           resource_type: "auto",
         },
         (error, result) => {
-          if (error) reject(error);
+          if (error) {
+            console.error("Error de Cloudinary:", error);
+            reject(error);
+          }
           resolve(result);
         }
       ).end(buffer);
     });
 
-    // Devolver la URL relativa (desde /public)
-    return NextResponse.json({ 
-      url: (result as any).secure_url,
-      message: 'Archivo subido correctamente' 
-    });
-    
+    if (!result || !(result as any).secure_url) {
+      throw new Error("No se pudo obtener la URL de la imagen");
+    }
+
+    return NextResponse.json({ url: (result as any).secure_url });
   } catch (error) {
-    console.error('Error al subir el archivo:', error);
+    console.error("Error al subir la imagen:", error);
     return NextResponse.json(
-      { error: 'Error al procesar la solicitud' },
+      { error: "Error al subir la imagen" },
       { status: 500 }
     );
   }
